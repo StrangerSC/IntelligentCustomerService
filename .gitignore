@@ -2,8 +2,8 @@
 __pycache__/
 
 # 模型文件、数据文件
-/docs/
 /data/
+/.claude/
 
 # IDE 编辑器缓存
 /.idea/
