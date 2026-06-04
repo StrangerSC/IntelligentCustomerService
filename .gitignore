@@ -16,3 +16,4 @@ __pycache__/
 .env.example
 requirements.txt.example
 README.md.example
+CLAUDE.md
