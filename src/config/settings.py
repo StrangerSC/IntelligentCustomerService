@@ -1,0 +1,43 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """应用配置类。
+
+    从环境变量及 .env 文件读取配置，支持类型校验与默认值。
+    """
+
+    model_config = SettingsConfigDict(
+        env_file='.env',
+        env_file_encoding='utf-8',
+        extra='ignore',
+    )
+
+    # 应用基础配置
+    APP_NAME: str = 'IntelligentCustomerService'
+    DEBUG: bool = False
+    HOST: str = ''
+    PORT: int
+
+    # API 配置
+    API_V1_PREFIX: str = ''
+
+    # CORS 配置
+    CORS_ORIGINS: list[str] = []
+
+    # --- LLM 配置 (国产模型) ---
+    # 百度千帆平台
+    API_KEY: str = ''
+    BASE_URL: str = ''
+    MODEL: str = ''
+
+    # --- Embedding 配置 ---
+    EMBEDDING_PATH: str = ''
+
+    # --- 日志配置 ---
+    LOG_LEVEL: str = 'INFO'
+    LOG_DIR: str = 'data/logs'
+    LOG_RETENTION_DAYS: int = 7
+
+
+settings = Settings()
