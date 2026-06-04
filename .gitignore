@@ -15,4 +15,4 @@ __pycache__/
 #暂时移除
 .env.example
 requirements.txt.example
-README.md
+README.md.example
