@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     BASE_URL: str = ''
     MODEL: str = ''
 
+    # --- 数据库配置 ---
+    DATABASE_URL: str = ''
+
     # --- Embedding 配置 ---
     EMBEDDING_PATH: str = ''
 
