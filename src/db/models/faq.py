@@ -51,6 +51,7 @@ class FAQ(Base):
     """
 
     __tablename__ = 'faq_records'
+    __table_args__ = {"schema": "knowledge"}
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
