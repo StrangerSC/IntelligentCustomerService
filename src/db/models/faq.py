@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, Integer, String, Text, func, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -51,7 +51,14 @@ class FAQ(Base):
     """
 
     __tablename__ = 'faq_records'
-    __table_args__ = {"schema": "knowledge"}
+    __table_args__ = (
+        Index('idx_is_deleted', 'is_deleted'),
+        Index('idx_knowledge_type', 'knowledge_type'),
+        Index('idx_is_enabled', 'is_enabled'),
+        Index('idx_vector_id', 'vector_id'),
+        Index('idx_embedding_status', 'embedding_status'),
+        {"schema": "knowledge"},
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
