@@ -15,3 +15,5 @@ engine = create_async_engine(
     echo=settings.DEBUG,
     future=True,
 )
+
+from src.db.models.faq import FAQ
