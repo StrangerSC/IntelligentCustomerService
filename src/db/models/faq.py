@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, Integer, String, Text, func, Index
+from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, Integer, String, Text, func, Index, false
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -29,16 +29,16 @@ class KnowledgeType(str, Enum):
 class EmbeddingStatus(str, Enum):
     """向量状态枚举。"""
 
-    PENDING = 'pending'
-    INDEXED = 'indexed'
-    FAILED = 'failed'
+    PENDING = '1'
+    INDEXED = '2'
+    FAILED = '3'
 
     @property
     def embedding_status_name(self) -> str:
         name_map = {
-            'pending': '待处理',
-            'indexed': '已索引',
-            'failed': '处理失败',
+            '1': '待处理',
+            '2': '已索引',
+            '3': '处理失败',
         }
         return name_map[self.value]
 
@@ -77,25 +77,27 @@ class FAQ(Base):
         comment='答案文本',
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
+        DateTime(timezone=False),
+        server_default=func.date_trunc('second', func.now()),
         nullable=False,
         comment='创建时间',
     )
     created_by: Mapped[str] = mapped_column(
         String(20),
+        server_default='system',
         nullable=False,
         comment='创建人',
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
+        DateTime(timezone=False),
+        server_default=func.date_trunc('second', func.now()),
+        onupdate=func.date_trunc('second', func.now()),
         nullable=False,
         comment='更新时间',
     )
     updated_by: Mapped[str] = mapped_column(
         String(20),
+        server_default='system',
         nullable=False,
         comment='更新人',
     )

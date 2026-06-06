@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, computed_field, field_serializer
 
 from src.db.models.faq import KnowledgeType
 
@@ -38,7 +38,6 @@ class FAQOut(BaseModel):
     question: str
     answer: str
     knowledge_type: KnowledgeType
-    knowledge_type_name: Optional[str] = None  # 自动中文
     is_enabled: bool
     view_count: int
     vector_id: Optional[str]
@@ -49,9 +48,15 @@ class FAQOut(BaseModel):
     class Config:
         from_attributes = True
 
-    # 自动返回中文类型
-    @field_serializer("knowledge_type_name")
-    def get_kt_name(self, *_):
+    @field_serializer("created_at", "updated_at")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """将时间格式化为 YYYY-MM-DD HH:MM:SS。"""
+        return value.strftime("%Y-%m-%d %H:%M:%S")
+
+    @computed_field
+    @property
+    def knowledge_type_name(self) -> str:
+        """知识类型中文名，由 knowledge_type 自动派生。"""
         return self.knowledge_type.knowledge_type_name
 
 class FAQListResponse(BaseModel):
