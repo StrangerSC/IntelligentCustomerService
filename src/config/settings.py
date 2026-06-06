@@ -34,8 +34,17 @@ class Settings(BaseSettings):
     BASE_URL: str = ''
     MODEL: str = ''
 
-    # --- 数据库配置 ---
-    DATABASE_URL: str = ''
+    # 数据库基础配置
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_HOST: str
+    DB_PORT: str
+    DB_NAME: str
+
+    # 通过 @property 动态构建数据库 URL
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     # --- Embedding 配置 ---
     EMBEDDING_PATH: str = ''
