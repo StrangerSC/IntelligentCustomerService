@@ -8,6 +8,7 @@ from alembic import context
 # 导入项目配置和模型基类
 from src.config.settings import settings
 from src.db.base import Base
+from src.db.models.faq import FAQ  # noqa: F401 确保 Alembic 发现模型
 
 
 # this is the Alembic Config object, which provides
