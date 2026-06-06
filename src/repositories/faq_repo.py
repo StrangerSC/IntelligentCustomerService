@@ -17,14 +17,14 @@ class FAQRepository:
         """
         self.db = db
 
-    async def find_by_id(self, faq_id: uuid.UUID) -> FAQ | None:
+    async def find_by_id_repo(self, faq_id: uuid.UUID) -> FAQ | None:
         """根据 ID 查询单条 FAQ。"""
         result = await self.db.execute(
-            select(FAQ).where(FAQ.id == faq_id)
+            select(FAQ).where(FAQ.id == faq_id, FAQ.is_deleted == False)
         )
         return result.scalar_one_or_none()
 
-    async def find_all(
+    async def find_all_repo(
         self,
         *,
         knowledge_type: KnowledgeType | None = None,
@@ -57,14 +57,14 @@ class FAQRepository:
             .order_by(FAQ.updated_at.desc())
         )
 
-        result = await self.db.execute(stmt)
-        count_result = await self.db.execute(count_stmt)
+        result = await self.db.execute(stmt.where(FAQ.is_deleted == False))
+        count_result = await self.db.execute(count_stmt.where(FAQ.is_deleted == False))
 
         faqs = result.scalars().all()
         total = count_result.scalar_one()
         return list(faqs), total
 
-    async def insert(self, faq: FAQ) -> FAQ:
+    async def insert_repo(self, faq: FAQ) -> FAQ:
         """插入一条 FAQ 记录。
 
         Args:
@@ -78,7 +78,7 @@ class FAQRepository:
         await self.db.refresh(faq)
         return faq
 
-    async def update(self, faq: FAQ) -> FAQ:
+    async def update_repo(self, faq: FAQ) -> FAQ:
         """更新一条 FAQ 记录。
 
         Args:
@@ -91,7 +91,7 @@ class FAQRepository:
         await self.db.refresh(faq)
         return faq
 
-    async def delete_by_id(self, faq_id: uuid.UUID) -> bool:
+    async def delete_by_id_repo(self, faq_id: uuid.UUID) -> bool:
         """根据 ID 删除一条 FAQ。
 
         Args:
