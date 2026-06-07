@@ -52,6 +52,7 @@ class FAQ(Base):
 
     __tablename__ = 'faq_records'
     __table_args__ = (
+        Index('idx_id', 'id'),
         Index('idx_is_deleted', 'is_deleted'),
         Index('idx_knowledge_type', 'knowledge_type'),
         Index('idx_is_enabled', 'is_enabled'),
