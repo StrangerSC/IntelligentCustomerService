@@ -12,6 +12,9 @@ __pycache__/
 #环境配置
 .env
 
+# 密钥文件
+keys/private.pem
+
 #暂时移除
 .env.example
 requirements.txt.example
