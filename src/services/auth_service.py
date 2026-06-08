@@ -1,8 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.db.models.api_key import ApiKey
 from src.db.models.user import User
+from src.repositories.api_key_repo import ApiKeyRepository
 from src.repositories.user_repo import UserRepository
 from src.schemas.user import RegisterRequest, LoginRequest
+from src.utils.aes_crypto import encrypt_secret
+from src.utils.api_key import generate_api_key, generate_secret
 from src.utils.security import (
     create_access_token,
     hash_password,
@@ -81,3 +85,44 @@ async def login(db: AsyncSession, data: LoginRequest) -> tuple[User, str]:
 
     token = create_access_token(user_id=str(user.id))
     return user, token
+
+
+async def create_api_key(db: AsyncSession, name: str, created_by: str) -> tuple[ApiKey, str]:
+    """创建第三方 API Key + Secret。
+
+    Secret 仅在此时返回明文，存储的是 bcrypt 哈希。
+
+    Args:
+        db: 异步数据库会话。
+        name: 备注名称。
+        created_by: 创建人账号。
+
+    Returns:
+        (ApiKey 实例, 明文 Secret)
+    """
+    repo = ApiKeyRepository(db)
+    api_key = generate_api_key()
+    secret = generate_secret()
+
+    ak = ApiKey(
+        name=name,
+        api_key=api_key,
+        secret=encrypt_secret(secret),
+        created_by=created_by,
+    )
+    await repo.insert(ak)
+    return ak, secret
+
+
+async def list_api_keys(
+    db: AsyncSession, page: int = 1, page_size: int = 20
+) -> tuple[list[ApiKey], int]:
+    """分页查询 API Key 列表。"""
+    repo = ApiKeyRepository(db)
+    return await repo.find_all(page=page, page_size=page_size)
+
+
+async def revoke_api_key(db: AsyncSession, ak_id) -> bool:
+    """吊销 API Key（软删除）。"""
+    repo = ApiKeyRepository(db)
+    return await repo.soft_delete(ak_id)
