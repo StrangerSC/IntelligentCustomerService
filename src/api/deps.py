@@ -101,6 +101,7 @@ async def get_current_third_party(
 
     # 验签：先解密 Secret，再算 HMAC
     body = await request.body()
+    request.state.cached_body = body
     if not verify_signature(decrypt_secret(ak.secret), body, timestamp, signature):
         raise HTTPException(status_code=401, detail='签名验证失败')
 
