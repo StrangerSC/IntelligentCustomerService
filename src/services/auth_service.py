@@ -88,15 +88,15 @@ async def login(db: AsyncSession, data: LoginRequest) -> tuple[User, str]:
     return user, token
 
 
-async def create_api_key(db: AsyncSession, name: str, id: UUID) -> tuple[ApiKey, str]:
+async def create_api_key(db: AsyncSession, name: str, user_id: UUID) -> tuple[ApiKey, str]:
     """创建第三方 API Key + Secret。
 
-    Secret 仅在此时返回明文，存储的是 bcrypt 哈希。
+    Secret 仅在此时返回明文，AES-256-GCM 加密后存入数据库。
 
     Args:
         db: 异步数据库会话。
         name: 备注名称。
-        id: 创建人账号id。
+        user_id: 创建人用户 ID。
 
     Returns:
         (ApiKey 实例, 明文 Secret)
@@ -109,7 +109,7 @@ async def create_api_key(db: AsyncSession, name: str, id: UUID) -> tuple[ApiKey,
         name=name,
         api_key=api_key,
         secret=encrypt_secret(secret),
-        created_by=id,
+        created_by=str(user_id),
     )
     await repo.insert(ak)
     return ak, secret

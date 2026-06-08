@@ -99,9 +99,11 @@ async def get_current_third_party(
     if not ak.is_enabled:
         raise HTTPException(status_code=403, detail='API Key 已禁用')
 
-    # 验签：先解密 Secret，再算 HMAC
+    # 验签：先解密 Secret 再算 HMAC
+    # state 给应用层缓存，_body 让 FastAPI 复用避免重复读流
     body = await request.body()
     request.state.cached_body = body
+    request._body = body
     if not verify_signature(decrypt_secret(ak.secret), body, timestamp, signature):
         raise HTTPException(status_code=401, detail='签名验证失败')
 

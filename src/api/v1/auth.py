@@ -62,7 +62,7 @@ async def create_api_key(
 ):
     """创建第三方 API Key（需登录）。Secret 仅此次返回。"""
     ak, secret = await auth_service.create_api_key(
-        db, name=data.name, id=current_user.id
+        db, name=data.name, user_id=current_user.id
     )
     return ApiKeyCreateResponse(
         id=ak.id,

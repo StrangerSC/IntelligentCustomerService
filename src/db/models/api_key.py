@@ -53,9 +53,9 @@ class ApiKey(Base):
         comment='创建时间',
     )
     created_by: Mapped[str] = mapped_column(
-        String(20),
+        String(255),
         nullable=False,
-        comment='创建人',
+        comment='创建人账号id',
     )
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -48,7 +50,7 @@ class ApiKeyRepository:
         await self.db.refresh(api_key)
         return api_key
 
-    async def soft_delete(self, ak_id: int) -> bool:
+    async def soft_delete(self, ak_id: UUID) -> bool:
         result = await self.db.execute(
             select(ApiKey).where(
                 ApiKey.id == ak_id,
