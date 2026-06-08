@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 
 from src.db.models.api_key import ApiKey
 from src.db.models.user import User
@@ -87,7 +88,7 @@ async def login(db: AsyncSession, data: LoginRequest) -> tuple[User, str]:
     return user, token
 
 
-async def create_api_key(db: AsyncSession, name: str, created_by: str) -> tuple[ApiKey, str]:
+async def create_api_key(db: AsyncSession, name: str, id: UUID) -> tuple[ApiKey, str]:
     """创建第三方 API Key + Secret。
 
     Secret 仅在此时返回明文，存储的是 bcrypt 哈希。
@@ -95,7 +96,7 @@ async def create_api_key(db: AsyncSession, name: str, created_by: str) -> tuple[
     Args:
         db: 异步数据库会话。
         name: 备注名称。
-        created_by: 创建人账号。
+        id: 创建人账号id。
 
     Returns:
         (ApiKey 实例, 明文 Secret)
@@ -108,7 +109,7 @@ async def create_api_key(db: AsyncSession, name: str, created_by: str) -> tuple[
         name=name,
         api_key=api_key,
         secret=encrypt_secret(secret),
-        created_by=created_by,
+        created_by=id,
     )
     await repo.insert(ak)
     return ak, secret
