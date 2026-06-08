@@ -6,7 +6,7 @@ from fastapi import FastAPI,Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.config.settings import settings
-from src.api.v1 import chat, knowledgebase
+from src.api.v1 import auth, chat, knowledgebase
 from src.utils.response import UnifiedResponse
 from src.utils.logger import setup_logging
 
@@ -60,6 +60,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+app.include_router(auth.router, prefix='/api/v1')
 app.include_router(chat.router, prefix='/api/v1')
 app.include_router(knowledgebase.router, prefix='/api/v1')
 
