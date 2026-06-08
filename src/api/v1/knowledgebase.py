@@ -4,7 +4,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api.deps import get_current_user
 from src.db.models.faq import KnowledgeType
+from src.db.models.user import User
 from src.db.session import get_db
 from src.schemas.faq import FAQCreate, FAQUpdate, FAQOut, FAQListResponse
 from src.services import faq_service
@@ -21,6 +23,7 @@ async def list_faqs(
     page: int = Query(1, ge=1, description='页码'),
     page_size: int = Query(20, ge=1, le=100, description='每页条数'),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """分页查询 FAQ 列表。"""
     faqs, total = await faq_service.list_faqs_service(
@@ -38,8 +41,9 @@ async def list_faqs(
 async def create_faq(
     data: FAQCreate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    """新建 FAQ。"""
+    """新建 FAQ（需登录）。"""
     faq = await faq_service.create_faq_service(db, data)
     return faq
 
@@ -48,6 +52,7 @@ async def create_faq(
 async def get_faq(
     faq_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """根据 ID 查询单条 FAQ。"""
     faq = await faq_service.get_faq_service(db, faq_id)
@@ -63,8 +68,9 @@ async def update_faq(
     faq_id: uuid.UUID,
     data: FAQUpdate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    """更新 FAQ。"""
+    """更新 FAQ（需登录）。"""
     faq = await faq_service.update_faq_service(db, faq_id, data)
     if not faq:
         return UnifiedResponse.error(
@@ -77,8 +83,9 @@ async def update_faq(
 async def delete_faq(
     faq_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    """删除 FAQ。"""
+    """删除 FAQ（需登录）。"""
     deleted = await faq_service.delete_faq_service(db, faq_id)
     if not deleted:
         return UnifiedResponse.error(
