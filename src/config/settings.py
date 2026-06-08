@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = 'RS256'
     JWT_PRIVATE_KEY_PATH: str = ''   # RSA 私钥文件路径
     JWT_PUBLIC_KEY_PATH: str = ''    # RSA 公钥文件路径
+    AES_KEY_PATH: str = ''           # AES-256 密钥文件路径
 
     # --- 日志配置 ---
     LOG_LEVEL: str = 'INFO'

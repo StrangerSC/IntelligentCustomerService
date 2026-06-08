@@ -14,6 +14,7 @@ __pycache__/
 
 # 密钥文件
 keys/private.pem
+keys/aes.key
 
 #暂时移除
 .env.example
