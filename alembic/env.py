@@ -10,7 +10,7 @@ from src.config.settings import settings
 from src.db.base import Base
 from src.db.models.faq import FAQ  # noqa: F401 确保 Alembic 发现模型
 from src.db.models.user import User  # noqa: F401 确保 Alembic 发现模型
-
+from src.db.models.api_key import ApiKey  # noqa: F401 确保 Alembic 发现模型
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
