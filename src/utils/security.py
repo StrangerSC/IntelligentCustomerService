@@ -1,16 +1,42 @@
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=14)
+from src.config.settings import BASE_DIR, settings
+
+pwd_context = CryptContext(
+    schemes=['bcrypt'],
+    deprecated='auto',
+    bcrypt__rounds=14,
+)
+
+
+def _load_key(path: str) -> str:
+    """从文件读取密钥内容。
+
+    Args:
+        path: 相对于项目根目录的密钥文件路径，或绝对路径。
+
+    Returns:
+        密钥文件内容（字符串）。
+    """
+    if not Path(path).is_absolute():
+        path = str(BASE_DIR / path)
+    return Path(path).read_text(encoding='utf-8')
 
 
 def hash_password(password: str) -> str:
     """对明文密码进行 bcrypt 哈希。
 
+    bcrypt 上限 72 字节，超出部分自动截断。
+
     Args:
         password: 明文密码。
 
     Returns:
-        bcrypt 哈希后的密文（60 字符左右）。
+        bcrypt 哈希后的密文（60 字符左右）
     """
     return pwd_context.hash(password)
 
@@ -26,3 +52,54 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         True 表示匹配，False 表示不匹配。
     """
     return pwd_context.verify(plain_password, hashed_password)
+
+
+def create_access_token(
+    user_id: str,
+    expires_delta: timedelta | None = None,
+) -> str:
+    """签发 JWT 访问令牌。
+
+    Args:
+        user_id: 用户 UUID 字符串。
+        expires_delta: 过期时间偏移量，None 则从配置读取。
+
+    Returns:
+        编码后的 JWT 字符串。
+    """
+    if expires_delta is None:
+        expires_delta = timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+
+    now = datetime.now(timezone.utc)
+    expire = now + expires_delta
+
+    payload = {
+        'sub': user_id,
+        'iat': now,
+        'exp': expire,
+    }
+
+    key = _load_key(settings.JWT_PRIVATE_KEY_PATH)
+    return jwt.encode(payload, key, algorithm=settings.JWT_ALGORITHM)
+
+
+def decode_access_token(token: str) -> dict | None:
+    """解码 JWT 令牌。
+
+    Args:
+        token: JWT 字符串。
+
+    Returns:
+        解码后的 payload 字典；解码失败返回 None。
+    """
+    key = _load_key(settings.JWT_PUBLIC_KEY_PATH)
+    try:
+        return jwt.decode(
+            token,
+            key,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+    except JWTError:
+        return None
