@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from src.utils.response import UnifiedResponse
+from src.core.response import UnifiedResponse
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 

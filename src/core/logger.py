@@ -106,7 +106,7 @@ def setup_logging() -> None:
         仅保留控制台输出，防止程序崩溃。
 
     Example:
-        >>> from src.utils.logger import setup_logging
+        >>> from src.core.logger import setup_logging
         >>> setup_logging()
     """
     # 计算日志绝对路径（项目根目录 / data / logs）

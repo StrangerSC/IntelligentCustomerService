@@ -6,9 +6,9 @@ from src.db.models.user import User
 from src.repositories.api_key_repo import ApiKeyRepository
 from src.repositories.user_repo import UserRepository
 from src.schemas.user import RegisterRequest, LoginRequest
-from src.utils.aes_crypto import encrypt_secret
+from src.core.aes_crypto import encrypt_secret
 from src.utils.api_key import generate_api_key, generate_secret
-from src.utils.security import (
+from src.core.security import (
     create_access_token,
     hash_password,
     verify_password,

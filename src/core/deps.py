@@ -9,9 +9,9 @@ from src.db.models.user import User
 from src.db.session import get_db
 from src.repositories.api_key_repo import ApiKeyRepository
 from src.repositories.user_repo import UserRepository
-from src.utils.aes_crypto import decrypt_secret
+from src.core.aes_crypto import decrypt_secret
 from src.utils.api_key import verify_signature
-from src.utils.security import decode_access_token
+from src.core.security import decode_access_token
 
 security_scheme = HTTPBearer()
 

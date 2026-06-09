@@ -7,8 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.config.settings import settings
 from src.api.v1 import auth, chat, knowledgebase
-from src.utils.response import UnifiedResponse
-from src.utils.logger import setup_logging
+from src.core.response import UnifiedResponse
+from core.logger import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)

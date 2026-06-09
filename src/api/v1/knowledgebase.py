@@ -4,13 +4,13 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_current_user
+from src.core.deps import get_current_user
 from src.db.models.faq import KnowledgeType
 from src.db.models.user import User
 from src.db.session import get_db
 from src.schemas.faq import FAQCreate, FAQUpdate, FAQOut, FAQListResponse
 from src.services import faq_service
-from src.utils.response import UnifiedResponse
+from src.core.response import UnifiedResponse
 
 router = APIRouter(prefix='/kb', tags=['knowledgebase'])
 

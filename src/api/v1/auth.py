@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_current_user
+from src.core.deps import get_current_user
 from src.db.models.user import User
 from src.db.session import get_db
 from src.schemas.api_key import (
@@ -18,7 +18,7 @@ from src.schemas.user import (
     UserOut,
 )
 from src.services import auth_service
-from src.utils.response import UnifiedResponse
+from src.core.response import UnifiedResponse
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
