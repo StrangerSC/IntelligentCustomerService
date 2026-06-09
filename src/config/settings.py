@@ -51,11 +51,16 @@ class Settings(BaseSettings):
 
     # --- 安全配置 ---
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    REFRESH_TOKEN_EXPIRE_HOURS: int = 168  # 7 天
+    REFRESH_TOKEN_EXPIRE_HOURS: int = 168           # 7 天
     JWT_ALGORITHM: str = 'RS256'
-    JWT_PRIVATE_KEY_PATH: str = ''   # RSA 私钥文件路径
-    JWT_PUBLIC_KEY_PATH: str = ''    # RSA 公钥文件路径
-    AES_KEY_PATH: str = ''           # AES-256 密钥文件路径
+    JWT_PRIVATE_KEY_PATH: str = ''                   # RSA 私钥文件路径
+    JWT_PUBLIC_KEY_PATH: str = ''                    # RSA 公钥文件路径
+    AES_KEY_PATH: str = ''                           # AES-256 密钥文件路径
+    MAX_FAILED_LOGIN_ATTEMPTS: int = 3               # 最多允许的失败次数
+    FAILED_LOGIN_WINDOW_MINUTES: int = 5             # 失败计数窗口（分钟）
+
+    # --- Redis 配置 ---
+    REDIS_URL: str = ''                              # 为空时自动使用本地内存缓存（开发模式）
 
     # --- 日志配置 ---
     LOG_LEVEL: str = 'INFO'

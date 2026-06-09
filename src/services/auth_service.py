@@ -3,12 +3,14 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config.settings import settings
 from src.db.models.api_key import ApiKey
 from src.db.models.user import User
 from src.repositories.api_key_repo import ApiKeyRepository
 from src.repositories.user_repo import UserRepository
 from src.schemas.user import RegisterRequest, LoginRequest
 from src.core.aes_crypto import encrypt_secret
+from src.core.cache import cache
 from src.utils.api_key import generate_api_key, generate_secret
 from src.core.security import (
     create_access_token,
@@ -58,12 +60,17 @@ async def register(db: AsyncSession, data: RegisterRequest) -> User:
     return await repo.insert(user)
 
 
+FAILED_LOGIN_KEY = 'login_failed:{}'
+FAILED_LOGIN_TTL = settings.FAILED_LOGIN_WINDOW_MINUTES * 60
+MAX_ATTEMPTS = settings.MAX_FAILED_LOGIN_ATTEMPTS
+
+
 async def login(
     db: AsyncSession, data: LoginRequest
 ) -> tuple[User, str, str]:
     """用户登录，验证通过后颁发双 Token。
 
-    校验账号是否存在、密码是否匹配、账号状态是否正常。
+    5 分钟内密码错误达到上限后，自动永久冻结账号。
 
     Args:
         db: 异步数据库会话。
@@ -76,19 +83,31 @@ async def login(
         AuthError: 账号不存在、密码错误、账号已冻结或已禁用。
     """
     repo = UserRepository(db)
+    cache_key = FAILED_LOGIN_KEY.format(data.account)
 
     user = await repo.find_by_account(data.account)
     if not user:
         raise AuthError('账号或密码错误', code=401)
 
-    if not verify_password(data.password, user.password):
-        raise AuthError('账号或密码错误', code=401)
-
+    # 已冻结，直接拒绝
     if user.is_frozen:
         raise AuthError('账号已冻结，请联系客服', code=403)
 
     if not user.is_enabled:
         raise AuthError('账号已禁用', code=403)
+
+    # 密码错误 → 计数 + 判断是否冻结
+    if not verify_password(data.password, user.password):
+        count = await cache.incr(cache_key, FAILED_LOGIN_TTL)
+        if count >= MAX_ATTEMPTS:
+            user.is_frozen = True
+            await db.commit()
+            await cache.delete(cache_key)
+            raise AuthError('密码错误次数过多，账号已冻结，请联系客服', code=403)
+        raise AuthError('账号或密码错误', code=401)
+
+    # 登录成功 → 清理失败计数
+    await cache.delete(cache_key)
 
     access_token = create_access_token(user_id=str(user.id))
     refresh_token = create_refresh_token(user_id=str(user.id))
