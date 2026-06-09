@@ -1,5 +1,7 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+import uuid
 from uuid import UUID
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models.api_key import ApiKey
 from src.db.models.user import User
@@ -10,6 +12,8 @@ from src.core.aes_crypto import encrypt_secret
 from src.utils.api_key import generate_api_key, generate_secret
 from src.core.security import (
     create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
     hash_password,
     verify_password,
 )
@@ -54,8 +58,10 @@ async def register(db: AsyncSession, data: RegisterRequest) -> User:
     return await repo.insert(user)
 
 
-async def login(db: AsyncSession, data: LoginRequest) -> tuple[User, str]:
-    """用户登录，验证通过后颁发 JWT。
+async def login(
+    db: AsyncSession, data: LoginRequest
+) -> tuple[User, str, str]:
+    """用户登录，验证通过后颁发双 Token。
 
     校验账号是否存在、密码是否匹配、账号状态是否正常。
 
@@ -64,7 +70,7 @@ async def login(db: AsyncSession, data: LoginRequest) -> tuple[User, str]:
         data: 登录请求体。
 
     Returns:
-        (用户实例, JWT 令牌)
+        (用户实例, Access Token, Refresh Token)
 
     Raises:
         AuthError: 账号不存在、密码错误、账号已冻结或已禁用。
@@ -84,8 +90,53 @@ async def login(db: AsyncSession, data: LoginRequest) -> tuple[User, str]:
     if not user.is_enabled:
         raise AuthError('账号已禁用', code=403)
 
-    token = create_access_token(user_id=str(user.id))
-    return user, token
+    access_token = create_access_token(user_id=str(user.id))
+    refresh_token = create_refresh_token(user_id=str(user.id))
+    return user, access_token, refresh_token
+
+
+async def refresh_access_token(
+    db: AsyncSession, refresh_token: str
+) -> str:
+    """用 Refresh Token 换取新的 Access Token。
+
+    校验 Refresh Token 有效性、用户是否存在、账号状态是否正常。
+
+    Args:
+        db: 异步数据库会话。
+        refresh_token: 刷新令牌。
+
+    Returns:
+        新的 Access Token。
+
+    Raises:
+        AuthError: Refresh Token 无效、用户不存在、账号已冻结或已禁用。
+    """
+    payload = decode_refresh_token(refresh_token)
+    if payload is None:
+        raise AuthError('刷新令牌无效或已过期', code=401)
+
+    user_id = payload.get('sub')
+    if user_id is None:
+        raise AuthError('令牌格式错误', code=401)
+
+    repo = UserRepository(db)
+
+    try:
+        user = await repo.find_by_id(uuid.UUID(user_id))
+    except ValueError:
+        raise AuthError('令牌格式错误', code=401)
+
+    if user is None:
+        raise AuthError('用户不存在', code=401)
+
+    if user.is_frozen:
+        raise AuthError('账号已冻结，请联系客服', code=403)
+
+    if not user.is_enabled:
+        raise AuthError('账号已禁用', code=403)
+
+    return create_access_token(user_id=str(user.id))
 
 
 async def create_api_key(db: AsyncSession, name: str, user_id: UUID) -> tuple[ApiKey, str]:

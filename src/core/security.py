@@ -58,7 +58,7 @@ def create_access_token(
     user_id: str,
     expires_delta: timedelta | None = None,
 ) -> str:
-    """签发 JWT 访问令牌。
+    """签发 JWT 访问令牌（短期，仅用于 API 调用）。
 
     Args:
         user_id: 用户 UUID 字符串。
@@ -79,6 +79,39 @@ def create_access_token(
         'sub': user_id,
         'iat': now,
         'exp': expire,
+        'type': 'access',
+    }
+
+    key = _load_key(settings.JWT_PRIVATE_KEY_PATH)
+    return jwt.encode(payload, key, algorithm=settings.JWT_ALGORITHM)
+
+
+def create_refresh_token(
+    user_id: str,
+    expires_delta: timedelta | None = None,
+) -> str:
+    """签发 JWT 刷新令牌（长期，仅用于换取新 Access Token）。
+
+    Args:
+        user_id: 用户 UUID 字符串。
+        expires_delta: 过期时间偏移量，None 则从配置读取（默认 7 天）。
+
+    Returns:
+        编码后的 JWT 字符串。
+    """
+    if expires_delta is None:
+        expires_delta = timedelta(
+            hours=settings.REFRESH_TOKEN_EXPIRE_HOURS
+        )
+
+    now = datetime.now(timezone.utc)
+    expire = now + expires_delta
+
+    payload = {
+        'sub': user_id,
+        'iat': now,
+        'exp': expire,
+        'type': 'refresh',
     }
 
     key = _load_key(settings.JWT_PRIVATE_KEY_PATH)
@@ -86,20 +119,50 @@ def create_access_token(
 
 
 def decode_access_token(token: str) -> dict | None:
-    """解码 JWT 令牌。
+    """解码 JWT 访问令牌，仅接受 type=access 的令牌。
+
+    刷新令牌（type=refresh）不能用于 API 调用。
 
     Args:
         token: JWT 字符串。
 
     Returns:
-        解码后的 payload 字典；解码失败返回 None。
+        解码后的 payload 字典；解码失败或类型不匹配返回 None。
     """
     key = _load_key(settings.JWT_PUBLIC_KEY_PATH)
     try:
-        return jwt.decode(
+        payload = jwt.decode(
             token,
             key,
             algorithms=[settings.JWT_ALGORITHM],
         )
     except JWTError:
         return None
+    if payload.get('type') != 'access':
+        return None
+    return payload
+
+
+def decode_refresh_token(token: str) -> dict | None:
+    """解码 JWT 刷新令牌，仅接受 type=refresh 的令牌。
+
+    Access Token 不能用于刷新。
+
+    Args:
+        token: JWT 字符串。
+
+    Returns:
+        解码后的 payload 字典；解码失败或类型不匹配返回 None。
+    """
+    key = _load_key(settings.JWT_PUBLIC_KEY_PATH)
+    try:
+        payload = jwt.decode(
+            token,
+            key,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+    except JWTError:
+        return None
+    if payload.get('type') != 'refresh':
+        return None
+    return payload

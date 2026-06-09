@@ -11,8 +11,10 @@ from src.schemas.api_key import (
     ApiKeyCreateResponse,
     ApiKeyListResponse,
 )
+from src.config.settings import settings
 from src.schemas.user import (
     LoginRequest,
+    RefreshRequest,
     RegisterRequest,
     TokenResponse,
     UserOut,
@@ -43,15 +45,45 @@ async def login(
     data: LoginRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    """用户登录，返回 JWT 令牌。"""
+    """用户登录，返回 Access Token + Refresh Token。"""
     try:
-        user, token = await auth_service.login(db, data)
+        user, access_token, refresh_token = await auth_service.login(db, data)
     except auth_service.AuthError as exc:
         return UnifiedResponse.error(
             message=exc.message, code=exc.code, status_code=exc.code
         )
 
-    return TokenResponse(token=token, user=user)
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        user=user,
+    )
+
+
+@router.post('/refresh')
+async def refresh_token(
+    data: RefreshRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """用 Refresh Token 换取新的 Access Token。
+
+    无需重新登录，Refresh Token 有效期为 7 天。
+    """
+    try:
+        new_access_token = await auth_service.refresh_access_token(
+            db, data.refresh_token
+        )
+    except auth_service.AuthError as exc:
+        return UnifiedResponse.error(
+            message=exc.message, code=exc.code, status_code=exc.code
+        )
+
+    return UnifiedResponse.success(data={
+        'access_token': new_access_token,
+        'token_type': 'bearer',
+        'expires_in': settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    })
 
 
 @router.post('/api-keys', response_model=ApiKeyCreateResponse)

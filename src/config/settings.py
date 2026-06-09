@@ -51,6 +51,7 @@ class Settings(BaseSettings):
 
     # --- 安全配置 ---
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    REFRESH_TOKEN_EXPIRE_HOURS: int = 168  # 7 天
     JWT_ALGORITHM: str = 'RS256'
     JWT_PRIVATE_KEY_PATH: str = ''   # RSA 私钥文件路径
     JWT_PUBLIC_KEY_PATH: str = ''    # RSA 公钥文件路径

@@ -49,5 +49,14 @@ class UserOut(BaseModel):
 class TokenResponse(BaseModel):
     """登录成功返回的令牌。"""
 
-    token: str
+    access_token: str
+    refresh_token: str
+    token_type: str = 'bearer'
+    expires_in: int       # Access Token 有效期（秒）
     user: UserOut
+
+
+class RefreshRequest(BaseModel):
+    """刷新令牌请求体。"""
+
+    refresh_token: str = Field(..., description='刷新令牌')
